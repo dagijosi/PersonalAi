@@ -1,5 +1,4 @@
 import { Navigate, useLocation } from "react-router-dom";
-import { ROUTES } from "../router/routes";
 import { getAccessToken, isAccessTokenValid } from "./token";
 
 interface RequireAuthProps {
@@ -14,7 +13,7 @@ const RequireAuth = ({ children }: RequireAuthProps) => {
   return tokenIsValid ? (
     <>{children}</>
   ) : (
-    <Navigate to={ROUTES.LOGIN} state={{ from: location }} replace />
+    <Navigate to={"/"} state={{ from: location }} replace />
   );
 };
 
