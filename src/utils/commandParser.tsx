@@ -1,10 +1,53 @@
 type ToolName =
+  // Navigation
   | "navigate"
-  | "addNote";
 
-  type ToolArgs =
+  // Notes
+  | "addNote"
+  | "getNotes"
+  | "getNoteById"
+  | "updateNote"
+  | "deleteNote"
+  | "countNotes"
+
+  // Tasks
+  | "addTask"
+  | "getTasks"
+  | "getTaskById"
+  | "updateTask"
+  | "deleteTask"
+  | "countTasks"
+
+  //search
+  | "searchNotes"
+  | "searchTasks";
+
+type ToolArgs =
+  // Navigation
   | { path: string }
-  | { title: string; content: string; tags: string[] };
+
+  // Notes
+  | { title: string; content: string; tags: string[] } // addNote
+  | Record<string, never> // getNotes
+  | { id: number } // getNoteById, deleteNote
+  | { id: number; title: string; content: string; tags: string[] } // updateNote
+
+  // Tasks
+  | { title: string; description: string; dueDate: string; priority: "low" | "medium" | "high" } // addTask
+  | Record<string, never> // getTasks
+  | { id: number } // getTaskById, deleteTask
+  | {
+      id: number;
+      title: string;
+      description: string;
+      dueDate: string;
+      priority: "low" | "medium" | "high";
+      status: "todo" | "in-progress" | "done";
+    } // updateTask
+
+  // Search
+  | { query: string } // searchNotes, searchTasks
+  | Record<string, never>  // countNotes, countTasks
 
 export interface ToolCall {
   tool: ToolName;

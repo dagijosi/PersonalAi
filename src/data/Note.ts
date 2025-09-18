@@ -56,3 +56,15 @@ export const deleteNote = (id: number): boolean => {
   demoNotes.splice(index, 1);
   return true;
 }
+
+export const searchNotes = (query: string): Note[] => {
+  const notes = getNotes();
+  const lowerQuery = query.toLowerCase();
+
+  return notes.filter(
+    (note) =>
+      note.title.toLowerCase().includes(lowerQuery) ||
+      note.content.toLowerCase().includes(lowerQuery) ||
+      (note.tags ?? []).some((tag) => tag.toLowerCase().includes(lowerQuery))
+  );
+};

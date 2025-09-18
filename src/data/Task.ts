@@ -63,3 +63,16 @@ export const deleteTask = (id: number): boolean => {
   return true;
 };
 
+export const searchTasks = (query: string): Task[] => {
+  const tasks = getTasks();
+  const lowerQuery = query.toLowerCase();
+
+  return tasks.filter(
+    (task) =>
+      task.title.toLowerCase().includes(lowerQuery) ||
+      (task.description ?? "").toLowerCase().includes(lowerQuery) ||
+      task.status.toLowerCase().includes(lowerQuery) ||
+      task.priority.toLowerCase().includes(lowerQuery)
+      // removed tags, since Task type doesn't have tags
+  );
+};
