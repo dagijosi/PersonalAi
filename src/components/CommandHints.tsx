@@ -42,7 +42,7 @@ const CommandHints: React.FC<CommandHintsProps> = ({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
       transition={{ duration: 0.2 }}
-      className="absolute bottom-full mb-2 w-full rounded-lg border border-gray-700 bg-gray-800 p-2 shadow-lg"
+      className="absolute bottom-full mb-2 w-full rounded-lg border border-gray-700 bg-background p-2 shadow-lg"
     >
       <p className="px-2 py-1 text-xs text-gray-400">Commands</p>
       <ul ref={listRef} className="max-h-48 overflow-y-auto custom-scrollbar">
@@ -52,7 +52,7 @@ const CommandHints: React.FC<CommandHintsProps> = ({
             onClick={() => onSelect(cmd.template)}
             onMouseEnter={() => setHighlightedIndex(index)}
             className={`flex cursor-pointer items-center justify-between rounded-md p-2 text-sm ${
-              index === highlightedIndex ? 'bg-gray-600 text-white' : 'hover:bg-gray-700'
+              index === highlightedIndex ? 'bg-light-background text-primary' : 'hover:bg-light-background'
             }`}
           >
             <span>{cmd.name}</span>

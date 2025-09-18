@@ -18,9 +18,8 @@ export const useAIMutation = (
   return useMutation<string, Error, string>({
     mutationFn: async (prompt: string) => {
       const parsedToolCall = parseUserCommand(prompt);
-      handleToolCall(undefined,navigate);
       if (parsedToolCall) {
-        return handleToolCall(parsedToolCall);
+        return handleToolCall(parsedToolCall, navigate);
       }
 
       // ---------------------- AI Response ----------------------
@@ -34,7 +33,7 @@ export const useAIMutation = (
       try {
         const sanitized = aiResponse.replace(/```json\n|```/g, "").trim();
         const toolCall: ToolCall = JSON.parse(sanitized);
-        return handleToolCall(toolCall);
+        return handleToolCall(toolCall, navigate);
       } catch {
         return aiResponse; // Regular response, not a tool call
       }
