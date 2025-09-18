@@ -26,3 +26,33 @@ export const demoNotes: Note[] = [
     createdAt: "2025-09-15T16:45:00Z",
   },
 ];
+
+export const getNotes = (): Note[] => demoNotes;
+
+export const getNoteById = (id: number): Note | undefined => {
+  return demoNotes.find((note) => note.id === id);
+};
+
+export const addNote = (note: Omit<Note, "id" | "createdAt">): Note => {
+  const newNote: Note = {
+    ...note,
+    id: Math.max(0, ...demoNotes.map((i) => i.id)) + 1,
+    createdAt: new Date().toISOString(),
+  };
+  demoNotes.push(newNote);
+  return newNote;
+};
+
+export const updateNote = (updatedNote: Note): Note | undefined => {
+  const index = demoNotes.findIndex((note) => note.id === updatedNote.id);
+  if (index === -1) return undefined;
+
+  demoNotes[index] = updatedNote;
+  return updatedNote;
+};
+export const deleteNote = (id: number): boolean => {
+  const index = demoNotes.findIndex((note) => note.id === id);
+  if (index === -1) return false; 
+  demoNotes.splice(index, 1);
+  return true;
+}

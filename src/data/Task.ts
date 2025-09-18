@@ -29,3 +29,37 @@ export const demoTasks: Task[] = [
     createdAt: "2025-09-15T14:20:00Z",
   },
 ];
+
+export const getTasks = (): Task[] => demoTasks;
+
+export const getTaskById = (id: number): Task | undefined => {
+  return demoTasks.find((task) => task.id === id);
+};
+
+export const addTask = (task: Omit<Task, "id" | "createdAt" | "status">): Task => {
+  const newTask: Task = {
+    ...task,
+    id: Math.max(0, ...demoTasks.map((i) => i.id)) + 1,
+    createdAt: new Date().toISOString(),
+    status: "todo",
+  };
+  demoTasks.push(newTask);
+  return newTask;
+};
+
+export const updateTask = (updatedTask: Task): Task | undefined => {
+  const index = demoTasks.findIndex((task) => task.id === updatedTask.id);
+  if (index === -1) return undefined;
+
+  demoTasks[index] = updatedTask;
+  return updatedTask;
+};
+
+export const deleteTask = (id: number): boolean => {
+  const index = demoTasks.findIndex((task) => task.id === id);
+  if (index === -1) return false;
+
+  demoTasks.splice(index, 1);
+  return true;
+};
+

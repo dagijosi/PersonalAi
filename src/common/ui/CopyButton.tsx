@@ -12,7 +12,7 @@ const CopyButton: React.FC<{ text: string }> = ({ text }) => {
   return (
     <button
       onClick={handleCopy}
-      className="flex items-center gap-1 text-xs text-gray-400 hover:text-white"
+      className="flex items-center gap-1 text-xs text-light-text hover:text-light-background"
     >
       {copied ? <FiCheck className="text-green-400" /> : <FiCopy />}{" "}
       {copied ? "Copied" : "Copy"}

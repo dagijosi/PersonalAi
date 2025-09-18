@@ -1,3 +1,4 @@
+import { addNote } from "../data/Note";
 import routes from "../router/routes";
 import type { AppRoute } from "../types/AppType";
 import type { ToolCall } from "../utils/commandParser";
@@ -26,6 +27,16 @@ export const handleToolCall = async (
       } else {
         return `No route found for "${path}"`; // 👈 simple message instead of virtual navigation
       }
+    }
+    case "addNote": {
+      const { title, content,tags } = toolCall.args as {
+        title: string;
+        content: string;
+        tags: string[];
+      };
+      // Call the function to create a new note
+      const newNote = addNote({ title, content, tags });
+      return `Created new note with ID ${newNote.id}`;
     }
     default:
       return `Error: Unrecognized tool: ${toolCall.tool}`;

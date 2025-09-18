@@ -1,9 +1,10 @@
 type ToolName =
   | "navigate"
+  | "addNote";
 
   type ToolArgs =
   | { path: string }
-  | object
+  | { title: string; content: string; tags: string[] };
 
 export interface ToolCall {
   tool: ToolName;
