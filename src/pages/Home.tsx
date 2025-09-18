@@ -85,7 +85,7 @@ const Home = () => {
   }, [showHints]);
 
   return (
-    <div className="flex flex-col px-4 lg:px-8 pt-4 h-[calc(100dvh-5rem)] bg-background text-primary">
+    <div className="flex flex-col px-4 lg:px-8 h-[calc(100dvh-5rem)] bg-background text-primary">
         {/* Header */}
         <header className="flex items-center justify-between p-3 border-b border-gray-700">
           <div className="flex items-center gap-3">
@@ -128,11 +128,13 @@ const Home = () => {
             </Button>
           </div>
         </header>
+        <div className="flex-1 overflow-y-auto">
         <ChatArea 
           messages={messages}
           isPending={isPending}
           messagesEndRef={messagesEndRef}
         />
+        </div>
         <AiFotter 
           handleSubmit={handleSubmit}
           onSubmit={onSubmit}
