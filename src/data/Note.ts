@@ -25,7 +25,48 @@ export const demoNotes: Note[] = [
     tags: ["ai", "research"],
     createdAt: "2025-09-15T16:45:00Z",
   },
+  {
+    id: 4,
+    title: "Book Summary - Atomic Habits",
+    content:
+      "Key idea: Small daily improvements compound into remarkable results. Focus on identity, not outcomes.",
+    tags: ["personal", "reading"],
+    createdAt: "2025-09-14T20:00:00Z",
+  },
+  {
+    id: 5,
+    title: "Project Brainstorm",
+    content:
+      "Ideas for side project: task manager with AI notes, calendar sync, and smart prioritization.",
+    tags: ["work", "ideas", "ai"],
+    createdAt: "2025-09-13T18:30:00Z",
+  },
+  {
+    id: 6,
+    title: "Travel Plans",
+    content:
+      "Looking at visiting Japan in December. Must check flights and book hotel near Tokyo.",
+    tags: ["personal", "travel"],
+    createdAt: "2025-09-12T10:15:00Z",
+  },
+  {
+    id: 7,
+    title: "Weekly Reflection",
+    content:
+      "This week was productive. Managed to complete most tasks and maintain workout consistency.",
+    tags: ["personal", "journal"],
+    createdAt: "2025-09-11T22:00:00Z",
+  },
+  {
+    id: 8,
+    title: "Workshop Notes",
+    content:
+      "Attended workshop on modern frontend architecture. Key takeaway: micro-frontends + design systems.",
+    tags: ["work", "frontend", "learning"],
+    createdAt: "2025-09-10T15:00:00Z",
+  },
 ];
+
 
 export const getNotes = (): Note[] => demoNotes;
 

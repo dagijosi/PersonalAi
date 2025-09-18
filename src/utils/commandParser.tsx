@@ -20,7 +20,9 @@ type ToolName =
 
   //search
   | "searchNotes"
-  | "searchTasks";
+  | "searchTasks"
+  | "chartTasks"
+  | "chartNotes";
 
 type ToolArgs =
   // Navigation
@@ -33,7 +35,12 @@ type ToolArgs =
   | { id: number; title: string; content: string; tags: string[] } // updateNote
 
   // Tasks
-  | { title: string; description: string; dueDate: string; priority: "low" | "medium" | "high" } // addTask
+  | {
+      title: string;
+      description: string;
+      dueDate: string;
+      priority: "low" | "medium" | "high";
+    } // addTask
   | Record<string, never> // getTasks
   | { id: number } // getTaskById, deleteTask
   | {
@@ -47,7 +54,8 @@ type ToolArgs =
 
   // Search
   | { query: string } // searchNotes, searchTasks
-  | Record<string, never>  // countNotes, countTasks
+  | Record<string, never> // countNotes, countTasks
+  | { groupBy: "priority" | "status" | "tags"; type: "bar" | "line" | "pie" };
 
 export interface ToolCall {
   tool: ToolName;
@@ -64,14 +72,14 @@ export const parseUserCommand = (userPrompt: string): ToolCall | null => {
     .map((p) => p.trim())
     .filter((p) => p.length > 0);
   const command = parts[0];
-    switch (command) {
+  switch (command) {
     case "/navigate": {
       let path = parts[1];
       if (!path) return null;
       if (!path.startsWith("/")) path = "/" + path; // make absolute
       return { tool: "navigate", args: { path } };
     }
-     default:
+    default:
       return null;
   }
-}
+};

@@ -28,56 +28,77 @@ const ChatArea = ({ messages, isPending, messagesEndRef }: ChatAreaProps) => {
             <p className="text-sm">Start the conversation by typing below.</p>
           </motion.div>
         ) : (
-          messages.map((msg: Message) => (
-            <motion.div
-              key={msg.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.2 }}
-              className={cn(
-                "flex items-start gap-4",
-                msg.sender === "user" ? "justify-end" : "justify-start"
-              )}
-            >
-              {/* Avatar */}
-              {msg.sender === "ai" && (
-                <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-lg bg-light-background text-primary">
-                  <FiCpu />
-                </div>
-              )}
+          messages.map((msg: Message) => {
+            const isChart =
+              typeof msg.text === "string" &&
+              /"type"\s*:\s*"(bar|line|pie)"/.test(msg.text);
 
-              {/* Message bubble + copy button */}
-              <div className="max-w-[75%] text-sm leading-relaxed">
+            return (
+              <motion.div
+                key={msg.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.2 }}
+                className={cn(
+                  "flex items-start gap-4",
+                  msg.sender === "user" ? "justify-end" : "justify-start"
+                )}
+              >
+                {/* Avatar */}
+                {msg.sender === "ai" && (
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-lg bg-light-background text-primary">
+                    <FiCpu />
+                  </div>
+                )}
+
+                {/* Message bubble */}
                 <div
                   className={cn(
-                    "p-3 rounded-lg",
-                    msg.sender === "user"
-                      ? "bg-blue-500/20 text-primary"
-                      : "bg-light-background text-primary"
+                    "text-sm leading-relaxed",
+                    isChart ? "w-full" : "max-w-[75%]"
                   )}
                 >
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={markdownComponents}
+                  <div
+                    className={cn(
+                      "p-3 rounded-lg",
+                      msg.sender === "user"
+                        ? "bg-blue-500/20 text-primary"
+                        : "bg-light-background text-primary"
+                    )}
                   >
-                    {msg.text}
-                  </ReactMarkdown>
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={markdownComponents}
+                    >
+                      {typeof msg.text === "string"
+                        ? msg.text
+                        : JSON.stringify(msg.text, null, 2)}
+                    </ReactMarkdown>
+                  </div>
+
+                  {/* Copy button only for text, not charts */}
+                  {!isChart && (
+                    <div className="mt-1 flex justify-end">
+                      <CopyButton
+                        text={
+                          typeof msg.text === "string"
+                            ? msg.text.trim()
+                            : JSON.stringify(msg.text, null, 2)
+                        }
+                      />
+                    </div>
+                  )}
                 </div>
 
-                {/* Copy button under the message */}
-                <div className="mt-1 flex justify-end">
-                  <CopyButton text={msg.text.trim()}/>
-                </div>
-              </div>
-
-              {msg.sender === "user" && (
-                <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-lg bg-blue-500/20 text-primary">
-                  <FiUser />
-                </div>
-              )}
-            </motion.div>
-          ))
+                {msg.sender === "user" && (
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-lg bg-blue-500/20 text-primary">
+                    <FiUser />
+                  </div>
+                )}
+              </motion.div>
+            );
+          })
         )}
       </AnimatePresence>
 

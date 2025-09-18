@@ -210,6 +210,80 @@ export const handleToolCall = async (
       return `You have ${tasks.length} tasks.`;
     }
 
+    // --- Charts ---
+    case "chartNotes": {
+      const { groupBy, type } = toolCall.args as {
+        groupBy: "tags";
+        type: "bar" | "line" | "pie";
+      };
+
+      const notes = getNotes();
+      const counts: Record<string, number> = {};
+
+      notes.forEach((note) => {
+        if (groupBy === "tags" && Array.isArray(note.tags)) {
+          // ✅ Count each tag individually
+          note.tags.forEach((tag) => {
+            counts[tag] = (counts[tag] || 0) + 1;
+          });
+        } else {
+          // Fallback for any other fields
+          const key = String(note[groupBy as keyof typeof note] ?? "unknown");
+          counts[key] = (counts[key] || 0) + 1;
+        }
+      });
+
+      const chartData = Object.entries(counts).map(([key, count]) => ({
+        [groupBy]: key,
+        count,
+      }));
+
+      return `\`\`\`chart
+${JSON.stringify(
+  { type, data: chartData, xKey: groupBy, yKey: "count" },
+  null,
+  2
+)}
+\`\`\``;
+    }
+
+    case "chartTasks": {
+      const { groupBy, type } = toolCall.args as {
+        groupBy: "priority" | "status";
+        type: "bar" | "line" | "pie";
+      };
+
+      const tasks = getTasks();
+      const counts: Record<string, number> = {};
+
+      tasks.forEach((task) => {
+        const key = String(task[groupBy as keyof typeof task] ?? "unknown");
+        counts[key] = (counts[key] || 0) + 1;
+      });
+
+      // Sort priorities if groupBy = priority (high > medium > low)
+      let sortedEntries = Object.entries(counts);
+      if (groupBy === "priority") {
+        const order = ["high", "medium", "low"];
+        sortedEntries = sortedEntries.sort(
+          ([a], [b]) => order.indexOf(a) - order.indexOf(b)
+        );
+      }
+
+      const chartData = sortedEntries.map(([key, count]) => ({
+        [groupBy]: key,
+        count,
+      }));
+
+      return `\`\`\`chart
+${JSON.stringify(
+  { type, data: chartData, xKey: groupBy, yKey: "count" },
+  null,
+  2
+)}
+\`\`\``;
+    }
+
     // -------- Fallback --------
     default:
       return `Error: Unrecognized tool: ${toolCall.tool}`;
