@@ -68,4 +68,24 @@ export const commands: Command[] = [
     description: "Delete a task by ID. Usage: /deleteTask <id>",
     template: "/deleteTask ",
   },
+  {
+    name: "searchNotes",
+    description: "Search notes by keyword or tags. Usage: /searchNotes <query>",  
+    template: "/searchNotes ",
+  },
+  {
+    name: "searchTasks",
+    description: "Search tasks by keyword, priority, status, or tags. Usage: /searchTasks <query>",
+    template: "/searchTasks ",
+  },
+  {
+    name: "countNotes",
+    description: "Get the total number of notes. Usage: /countNotes",
+    template: "/countNotes",
+  },
+  {
+    name: "countTasks",
+    description: "Get the total number of tasks. Usage: /countTasks",
+    template: "/countTasks",
+  },
 ];
