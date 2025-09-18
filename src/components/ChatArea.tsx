@@ -15,7 +15,7 @@ interface ChatAreaProps {
 
 const ChatArea = ({ messages, isPending, messagesEndRef }: ChatAreaProps) => {
   return (
-    <div className="flex-1 h-[24rem] lg:h-[26rem] overflow-y-auto custom-scroll p-6 space-y-6">
+    <div className="flex-1 overflow-y-auto custom-scroll p-6 space-y-6">
       <AnimatePresence>
         {messages.length === 0 ? (
           <motion.div
