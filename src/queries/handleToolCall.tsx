@@ -53,8 +53,22 @@ export const handleToolCall = async (
     }
 
     case "getNotes": {
-      const notes = getNotes();
+      const { format = "text", sortBy, order = "desc" } = (toolCall.args || {}) as { format?: "json" | "text", sortBy?: "date", order?: "asc" | "desc" };
+      let notes = getNotes();
       if (!notes.length) return "No notes found.";
+
+      if (sortBy === "date") {
+        notes = notes.sort((a, b) => {
+          const dateA = new Date(a.createdAt).getTime();
+          const dateB = new Date(b.createdAt).getTime();
+          return order === "asc" ? dateA - dateB : dateB - dateA;
+        });
+      }
+
+      if (format === "json") {
+        return "```json\n" + JSON.stringify(notes, null, 2) + "\n```";
+      }
+
       return notes
         .map(
           (note) =>
@@ -80,20 +94,26 @@ export const handleToolCall = async (
     }
 
     case "updateNote": {
-      const { id, title, content, tags } = toolCall.args as {
+      const { id, ...updateData } = toolCall.args as {
         id: number;
-        title: string;
-        content: string;
-        tags: string[];
+        title?: string;
+        content?: string;
+        tags?: string[];
       };
-      const updated = updateNote({
-        id,
-        title,
-        content,
-        tags,
-        createdAt: new Date().toISOString(),
-      });
-      return updated ? `Updated note ${id}` : `No note found with ID ${id}`;
+
+      const originalNote = getNoteById(id);
+      if (!originalNote) {
+        return `No note found with ID ${id}`;
+      }
+
+      const updatedNote = {
+        ...originalNote,
+        ...updateData,
+      };
+
+      const success = updateNote(updatedNote);
+
+      return success ? `Updated note ${id}` : `No note found with ID ${id}`;
     }
 
     case "deleteNote": {
@@ -131,8 +151,36 @@ export const handleToolCall = async (
     }
 
     case "getTasks": {
-      const tasks = getTasks();
+      const { format = "text", sortBy, order = "desc" } = (toolCall.args || {}) as { format?: "json" | "text", sortBy?: "date" | "priority" | "status", order?: "asc" | "desc" };
+      let tasks = getTasks();
       if (!tasks.length) return "No tasks found.";
+
+      if (sortBy) {
+        tasks = tasks.sort((a, b) => {
+          let valA: string | number, valB: string | number;
+
+          if (sortBy === "date") {
+            valA = new Date(a.createdAt).getTime();
+            valB = new Date(b.createdAt).getTime();
+          } else if (sortBy === "priority") {
+            const priorityOrder = { low: 3, medium: 2, high: 1 };
+            valA = priorityOrder[a.priority];
+            valB = priorityOrder[b.priority];
+          } else { // status
+            valA = a.status;
+            valB = b.status;
+          }
+
+          if (valA < valB) return order === "asc" ? -1 : 1;
+          if (valA > valB) return order === "asc" ? 1 : -1;
+          return 0;
+        });
+      }
+
+      if (format === "json") {
+        return "```json\n" + JSON.stringify(tasks, null, 2) + "\n```";
+      }
+
       return tasks
         .map(
           (task) =>
@@ -158,25 +206,28 @@ export const handleToolCall = async (
     }
 
     case "updateTask": {
-      const { id, title, description, dueDate, priority, status } =
-        toolCall.args as {
-          id: number;
-          title: string;
-          description?: string;
-          dueDate: string;
-          priority: "low" | "medium" | "high";
-          status: "todo" | "in-progress" | "done";
-        };
-      const updated = updateTask({
-        id,
-        title,
-        description,
-        dueDate,
-        priority,
-        status,
-        createdAt: new Date().toISOString(),
-      });
-      return updated ? `Updated task ${id}` : `No task found with ID ${id}`;
+      const { id, ...updateData } = toolCall.args as {
+        id: number;
+        title?: string;
+        description?: string;
+        dueDate?: string;
+        priority?: "low" | "medium" | "high";
+        status?: "todo" | "in-progress" | "done";
+      };
+
+      const originalTask = getTaskById(id);
+      if (!originalTask) {
+        return `No task found with ID ${id}`;
+      }
+
+      const updatedTask = {
+        ...originalTask,
+        ...updateData,
+      };
+
+      const success = updateTask(updatedTask);
+
+      return success ? `Updated task ${id}` : `No task found with ID ${id}`;
     }
 
     case "deleteTask": {
@@ -200,6 +251,50 @@ export const handleToolCall = async (
         )
         .join("\n\n");
     }
+
+    case "searchAll": {
+      const { query } = toolCall.args as { query: string };
+      const noteResults = searchNotes(query);
+      const taskResults = searchTasks(query);
+
+      if (!noteResults.length && !taskResults.length) {
+        return `No notes or tasks found for "${query}".`;
+      }
+
+      let result = "";
+
+      if (noteResults.length > 0) {
+        result += "-- Notes --\n";
+        result += noteResults
+          .map(
+            (note) =>
+              `ID ${note.id}: ${note.title}\nContent: ${note.content}${
+                note.tags && note.tags.length > 0
+                  ? `\nTags: ${note.tags.join(", ")}`
+                  : ""
+              }\nCreated: ${new Date(note.createdAt).toLocaleString()}`
+          )
+          .join("\n\n");
+      }
+
+      if (taskResults.length > 0) {
+        if (result) result += "\n\n";
+        result += "-- Tasks --\n";
+        result += taskResults
+          .map(
+            (task) =>
+              `ID ${task.id}: ${task.title}\nDescription: ${
+                task.description ?? "No description"
+              }\nDue: ${task.dueDate}\nPriority: ${task.priority}\nStatus: ${
+                task.status
+              }\nCreated: ${new Date(task.createdAt).toLocaleString()}`
+          )
+          .join("\n\n");
+      }
+
+      return result;
+    }
+
     case "countNotes": {
       const notes = getNotes();
       return `You have ${notes.length} notes.`;
@@ -249,7 +344,7 @@ ${JSON.stringify(
 
     case "chartTasks": {
       const { groupBy, type } = toolCall.args as {
-        groupBy: "priority" | "status";
+        groupBy: "priority" | "status" | "dueDate";
         type: "bar" | "line" | "pie";
       };
 
@@ -268,6 +363,8 @@ ${JSON.stringify(
         sortedEntries = sortedEntries.sort(
           ([a], [b]) => order.indexOf(a) - order.indexOf(b)
         );
+      } else if (groupBy === "dueDate") {
+        sortedEntries = sortedEntries.sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime());
       }
 
       const chartData = sortedEntries.map(([key, count]) => ({

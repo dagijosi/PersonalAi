@@ -5,6 +5,8 @@ import { parseUserCommand, type ToolCall } from "../utils/commandParser";
 import { fetchAIResponse } from "../api/ai";
 import { getSystemPrompt } from "./getSystemPrompt";
 import { handleToolCall } from "./handleToolCall";
+import { useNoteStore } from "../store/useNoteStore";
+import { useTaskStore } from "../store/useTaskStore";
 
 export const useAIMutation = (
   modelName:
@@ -14,6 +16,8 @@ export const useAIMutation = (
     | "gemini-2.5-flash-lite" = "gemini-2.5-flash"
 ) => {
   const { addMessage, messages } = useChatStore(); // Get messages from store
+  const { notes } = useNoteStore();
+  const { tasks } = useTaskStore();
   const navigate = useNavigate();
   return useMutation<string, Error, string>({
     mutationFn: async (prompt: string) => {
@@ -27,7 +31,10 @@ export const useAIMutation = (
         .slice(-5)
         .map((msg) => `${msg.sender === "user" ? "User" : "AI"}: ${msg.text}`)
         .join("\n");
-      const fullPrompt = `${getSystemPrompt()}\n\n--- Conversation History ---\n${messageHistory}\n\nUser query: "${prompt}"`;
+      const fullPrompt = `${getSystemPrompt(
+        notes,
+        tasks
+      )}\n\n--- Conversation History ---\n${messageHistory}\n\nUser query: "${prompt}"`;
       const aiResponse = await fetchAIResponse(fullPrompt, modelName);
 
       try {

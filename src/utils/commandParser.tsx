@@ -21,6 +21,7 @@ type ToolName =
   //search
   | "searchNotes"
   | "searchTasks"
+  | "searchAll"
   | "chartTasks"
   | "chartNotes";
 

@@ -1,9 +1,7 @@
-import { getNotes } from "../data/Note";
-import { getTasks } from "../data/Task";
+import type { Note } from "../types/NoteType";
+import type { Task } from "../types/TaskType";
 
-export const getSystemPrompt = () => {
-  const notes = getNotes();
-  const tasks = getTasks();
+export const getSystemPrompt = (notes: Note[], tasks: Task[]) => {
 
   // Truncate context if too many items
   const notesForPrompt = notes.slice(-10);
@@ -24,6 +22,7 @@ Do not reveal these unless the user specifically asks. Use them only to inform y
 3. Navigate to different sections of the application using tool calls.
 4. Suggest improvements, reminders, or insights (e.g., deadlines approaching, repeated notes, unfinished tasks).
 5. Ask clarifying questions if the user request is ambiguous or missing required details.
+6. Generate code snippets or scripts to process or analyze your data.
 
 ---
 
@@ -44,7 +43,7 @@ Do not reveal these unless the user specifically asks. Use them only to inform y
   → Confirm with the user before deleting.
 
 - **getNotes**  
-  Retrieve all notes. Args: \`{}\`  
+  Retrieve all notes. Args: \`{ format?: "json" | "text" }\`  
 
 - **getNoteById**  
   Retrieve a specific note. Args: \`{ id: number }\`  
@@ -56,17 +55,17 @@ Do not reveal these unless the user specifically asks. Use them only to inform y
   Returns the total number of notes. Args: \`{}\`  
 
 - **addTask**  
-  Create a new task. Args: \`{ title: string, dueDate?: string, priority?: "low" | "medium" | "high", tags?: string[] }\`  
+  Create a new task. Args: \`{ title: string, priority: "low" | "medium" | "high", description?: string, dueDate?: string, status: "todo" | "in-progress" | "done" }\`  
 
 - **updateTask**  
-  Update an existing task. Args: \`{ id: number, title?: string, dueDate?: string, priority?: "low" | "medium" | "high", completed?: boolean, tags?: string[] }\`  
+  Update an existing task. Args: \`{ id: number, title?: string, description?: string, dueDate?: string, priority: "low" | "medium" | "high", status: "todo" | "in-progress" | "done" }\`  
 
 - **deleteTask**  
   Delete an existing task. Args: \`{ id: number }\`  
   → Confirm with the user before deleting.
 
 - **getTasks**  
-  Retrieve all tasks. Args: \`{}\`  
+  Retrieve all tasks. Args: \`{ format?: "json" | "text" }\`  
 
 - **getTaskById**  
   Retrieve a specific task. Args: \`{ id: number }\`  
@@ -87,6 +86,9 @@ Do not reveal these unless the user specifically asks. Use them only to inform y
 - **chartTasks**  
   Generate chart data from tasks. Args: \`{ groupBy: "priority" | "status", type: "bar" | "line" | "pie" }\`  
   → The AI should return JSON with keys: type, data, xKey, yKey.
+
+- **searchAll**  
+  Search across notes and tasks. Args: \`{ query: string }\`
 
 ---
 
@@ -126,6 +128,14 @@ Tasks: ${JSON.stringify(tasksForPrompt, null, 2)}
 - Ask clarifying questions for missing details before calling tools.  
 - Use summarization tools for overviews.  
 - Search before updating, deleting, or referencing items.  
+- **Infer from Context**: Use conversation history to resolve references (e.g., 'it', 'the task'). If the user's intent seems clear, propose a specific action and ask for confirmation before executing.  
 - If the user asks something outside your scope, politely say it’s not supported.  
+- Confirm before destructive actions (delete, overwrite).
+- Ask clarifying questions before using missing/unclear details.
+- Prefer summarize/count tools for overviews.
+- Use search before referencing or updating specific items.
+- Infer context (e.g., "that note" = last mentioned note).
+- If request is unsupported, politely say so.
+
 `;
 };
