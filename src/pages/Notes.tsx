@@ -7,6 +7,7 @@ import { Input } from "../common/ui/Input";
 import { type Note } from "../types/NoteType";
 import { Modal } from "../common/ui/Modal";
 import { FiPlus } from "react-icons/fi";
+import NoteSummary from "../components/NoteSummary";
 
 const Notes: React.FC = () => {
   const { notes, addNote, updateNote, deleteNote } = useNoteStore();
@@ -67,6 +68,7 @@ const Notes: React.FC = () => {
           </Button>
         )}
       </div>
+      <NoteSummary />
       <Modal
         isOpen={isCreating || !!editingNoteId}
         onClose={handleCancel}

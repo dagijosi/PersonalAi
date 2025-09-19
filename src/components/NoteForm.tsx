@@ -6,7 +6,8 @@ import { Button } from "../common/ui/Button";
 import { Input } from "../common/ui/Input";
 import { Textarea } from "../common/ui/Textarea";
 import { type Note } from "../types/NoteType";
-import { FiTag, FiLink } from "react-icons/fi";
+import { FiTag, FiLink, FiLoader } from "react-icons/fi";
+import { fetchAITags } from "../api/ai";
 
 const noteSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -24,11 +25,15 @@ interface NoteFormProps {
 }
 
 const NoteForm: React.FC<NoteFormProps> = ({ note, onSubmit, onClose }) => {
+  const [isGeneratingTags, setIsGeneratingTags] = React.useState(false);
+  const [suggestedTags, setSuggestedTags] = React.useState<string[]>([]);
+  const [isSuggestingTags, setIsSuggestingTags] = React.useState(false);
   const {
     register,
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<NoteFormData>({
     resolver: zodResolver(noteSchema),
@@ -39,6 +44,59 @@ const NoteForm: React.FC<NoteFormProps> = ({ note, onSubmit, onClose }) => {
       linkedTasks: note?.linkedTasks?.join(", ") || "",
     },
   });
+
+  const content = watch("content");
+  const currentTags = watch("tags");
+
+  useEffect(() => {
+    const handler = setTimeout(async () => {
+      if (content && content.length > 50) { // Only suggest for substantial content
+        setIsSuggestingTags(true);
+        try {
+          const aiTags = await fetchAITags(content);
+          const newTags = aiTags.split(",").map(tag => tag.trim()).filter(tag => tag.length > 0);
+          setSuggestedTags(newTags);
+        } catch (error) {
+          console.error("Error suggesting tags:", error);
+        } finally {
+          setIsSuggestingTags(false);
+        }
+      } else {
+        setSuggestedTags([]);
+      }
+    }, 1000); // 1-second debounce
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [content]);
+
+  const handleGenerateTags = async () => {
+    if (!content) {
+      alert("Please write some content to generate tags.");
+      return;
+    }
+
+    setIsGeneratingTags(true);
+    try {
+      const generatedTagsString = await fetchAITags(content);
+      const newTags = generatedTagsString.split(",").map(tag => tag.trim()).filter(tag => tag.length > 0);
+      setSuggestedTags(prev => Array.from(new Set([...prev, ...newTags])));
+    } catch (error) {
+      console.error("Failed to generate tags:", error);
+      alert("Failed to generate tags. Please check your API key and try again.");
+    } finally {
+      setIsGeneratingTags(false);
+    }
+  };
+
+  const handleAddSuggestedTag = (tag: string) => {
+    const existingTags = currentTags ? currentTags.split(",").map(t => t.trim()) : [];
+    if (!existingTags.includes(tag)) {
+      const newTags = [...existingTags, tag].join(", ");
+      setValue("tags", newTags, { shouldValidate: true });
+    }
+  };
 
   useEffect(() => {
     reset({
@@ -95,13 +153,27 @@ const NoteForm: React.FC<NoteFormProps> = ({ note, onSubmit, onClose }) => {
       </div>
 
       {/* Tags */}
-      <div>
-        <Input
-          label="Tags (comma separated)"
-          labelClassName="text-primary font-medium"
-          {...register("tags")}
-          placeholder="e.g. work, personal, ideas"
-        />
+      <div className="flex flex-col gap-2">
+        <div className="flex justify-between items-center mb-1">
+          <label className="text-primary font-medium">Tags (comma separated)</label>
+          <Button
+            type="button"
+            onClick={handleGenerateTags}
+            isLoading={isGeneratingTags}
+            loadingIcon={<FiLoader className="animate-spin" />}
+            className="px-3 py-1 text-sm rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300"
+            disabled={isGeneratingTags}
+          >
+            {isGeneratingTags ? "Generating..." : "Generate Tags"}
+          </Button>
+        </div>
+        <div className="relative">
+          <Textarea
+            {...register("tags")}
+            placeholder="e.g. work, personal, ideas"
+            className="min-h-[60px]"
+          />
+        </div>
         {previewTags.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-2">
             {previewTags.map((tag) => (
@@ -112,6 +184,30 @@ const NoteForm: React.FC<NoteFormProps> = ({ note, onSubmit, onClose }) => {
                 <FiTag className="w-3 h-3" />
                 {tag}
               </span>
+            ))}
+          </div>
+        )}
+
+        {isSuggestingTags && (
+          <div className="flex items-center gap-2 mt-2 text-gray-500 text-sm">
+            <FiLoader className="animate-spin" />
+            <span>Suggesting tags...</span>
+          </div>
+        )}
+
+        {suggestedTags.length > 0 && !isSuggestingTags && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            <span className="text-primary text-sm">Suggestions:</span>
+            {suggestedTags.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => handleAddSuggestedTag(tag)}
+                className="flex items-center gap-1 bg-green-50 text-green-600 border border-green-200 text-xs px-2 py-1 rounded-full hover:bg-green-100 transition-colors duration-200"
+              >
+                <FiTag className="w-3 h-3" />
+                {tag}
+              </button>
             ))}
           </div>
         )}

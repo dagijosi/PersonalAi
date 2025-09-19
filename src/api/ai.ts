@@ -51,3 +51,39 @@ export const testApiKey = async (apiKey: string): Promise<boolean> => {
     return false;
   }
 };
+
+export const fetchAITags = async (content: string): Promise<string> => {
+  if (!content) {
+    throw new Error('Content cannot be empty for tag generation.');
+  }
+
+  const prompt = `Act as a tag generator. Based on the following content, provide 3-5 relevant, comma-separated tags. Do not include any other text or explanation, just the tags.\n\nContent: "${content}"\n\nTags:`;
+
+  try {
+    const tags = await fetchAIResponse(prompt);
+    return tags.trim();
+  } catch (error) {
+    console.error("Error fetching AI tags:", error);
+    throw new Error("Failed to generate tags from AI. Please try again.");
+  }
+};
+
+export const fetchAISummary = async (content: string): Promise<string> => {
+  if (!content) {
+    return "No content to summarize.";
+  }
+
+  const prompt = `Provide only a concise paragraph summary of the following text, without using any markdown formatting (e.g., no bolding, italics, etc.) and without any introductory phrases:
+
+${content}
+
+Summary:`;
+
+  try {
+    const summary = await fetchAIResponse(prompt);
+    return summary.trim();
+  } catch (error) {
+    console.error("Error fetching AI summary:", error);
+    throw new Error("Failed to generate summary from AI. Please try again.");
+  }
+};

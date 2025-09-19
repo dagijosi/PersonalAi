@@ -7,6 +7,7 @@ import { Input } from "../common/ui/Input";
 import { type Task } from "../types/TaskType";
 import { Modal } from "../common/ui/Modal";
 import { FiPlus } from "react-icons/fi";
+import TaskSummary from "../components/TaskSummary";
 
 const Tasks: React.FC = () => {
   const { tasks, addTask, updateTask, deleteTask, updateTaskStatus } =
@@ -67,6 +68,7 @@ const Tasks: React.FC = () => {
           </Button>
         )}
       </div>
+      <TaskSummary />
       <Modal
         isOpen={isCreating || !!editingTaskId}
         onClose={handleCancel}
