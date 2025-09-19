@@ -1,3 +1,4 @@
+import { fetchAISuggestedGroups, fetchAISuggestedTask, fetchAISummary } from "../api/ai";
 import {
   addNote,
   getNotes,
@@ -397,6 +398,82 @@ export const handleToolCall = async (
     case "countTasks": {
       const tasks = getTasks();
       return `You have ${tasks.length} tasks.`;
+    }
+
+    case "summarizeNotes": {
+      const { query } = toolCall.args as { query: string };
+      const notesToSummarize = searchNotes(query);
+
+      if (!notesToSummarize.length) {
+        return `No notes found for query: "${query}".`;
+      }
+
+      const contentToSummarize = notesToSummarize
+        .map(note => `Title: ${note.title}\nContent: ${note.content}`)
+        .join('\n\n---\n\n');
+
+      try {
+        const summary = await fetchAISummary(contentToSummarize);
+        return `Summary for notes matching "${query}":\n${summary}`;
+      } catch (error) {
+        console.error("Error summarizing notes:", error);
+        return "Failed to generate summary. Please try again.";
+      }
+    }
+
+    case "suggestTaskFromNote": {
+      const { noteId } = toolCall.args as { noteId: number };
+      const note = getNoteById(noteId);
+
+      if (!note) {
+        return `No note found with ID ${noteId}.`;
+      }
+
+      try {
+        const suggestedTask = await fetchAISuggestedTask(note.content);
+        if (suggestedTask) {
+          return `AI Suggested Task from Note ID ${noteId}:\nTitle: ${suggestedTask.title}\nDescription: ${suggestedTask.description ?? 'N/A'}\nPriority: ${suggestedTask.priority}`;
+        } else {
+          return `AI did not suggest a task from Note ID ${noteId}.`;
+        }
+      } catch (error) {
+        console.error("Error suggesting task from note:", error);
+        return "Failed to suggest task. Please try again.";
+      }
+    }
+
+    case "suggestGroupsFromNotes": {
+      const { query } = toolCall.args as { query?: string }; // Make query optional
+      let notesToGroup: Note[];
+
+      if (query) {
+        notesToGroup = searchNotes(query);
+      } else {
+        notesToGroup = getNotes(); // Use all notes if no query
+      }
+
+      if (!notesToGroup.length) {
+        return `No notes found ${query ? `for query: "${query}"` : ""} to suggest groups from.`;
+      }
+
+      console.log("Notes to group:", notesToGroup);
+
+      try {
+        const suggestedGroups = await fetchAISuggestedGroups(notesToGroup);
+        if (suggestedGroups && suggestedGroups.length > 0) {
+          let response = `AI Suggested Groups ${query ? `for notes matching "${query}"` : "from all notes"}:\n`;
+          suggestedGroups.forEach((group, index) => {
+            response += `\nGroup ${index + 1}: ${group.groupName}\n`;
+            response += `Notes: ${group.noteIds.map(id => `ID ${id}`).join(", ")}\n`;
+          });
+          return response;
+        } else {
+          return `AI did not suggest any groups ${query ? `for notes matching "${query}"` : "from all notes"}.`;
+        }
+      } catch (error) {
+        console.error("Error suggesting groups from notes:", error);
+        return "Failed to suggest groups. Please try again.";
+      }
     }
 
     // --- Charts ---

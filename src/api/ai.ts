@@ -134,9 +134,11 @@ JSON Group Suggestions:`;
       return null;
     }
     const suggestedGroups = JSON.parse(cleanedResponse);
-    // Basic validation
-    if (Array.isArray(suggestedGroups) && suggestedGroups.every(group => group.groupName && Array.isArray(group.noteIds) && group.noteIds.length >= 3)) {
-      return suggestedGroups;
+    if (Array.isArray(suggestedGroups)) {
+      const validGroups = suggestedGroups.filter(group => group.groupName && Array.isArray(group.noteIds) && group.noteIds.length >= 3);
+      if (validGroups.length > 0) {
+        return validGroups;
+      }
     }
     return null;
   } catch (error) {

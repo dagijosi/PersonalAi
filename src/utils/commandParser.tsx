@@ -25,7 +25,10 @@ type ToolName =
   | "searchTasks"
   | "searchAll"
   | "chartTasks"
-  | "chartNotes";
+  | "chartNotes"
+  | "summarizeNotes"
+  | "suggestTaskFromNote"
+  | "suggestGroupsFromNotes";
 
 type ToolArgs =
   // Navigation
@@ -57,7 +60,8 @@ type ToolArgs =
     } // updateTask
 
   // Search
-  | { query: string } // searchNotes, searchTasks
+  | { query?: string } // searchNotes, searchTasks, summarizeNotes, suggestGroupsFromNotes
+  | { noteId: number } // suggestTaskFromNote
   | Record<string, never> // countNotes, countTasks
   | { groupBy: "priority" | "status" | "tags"; type: "bar" | "line" | "pie" };
 
@@ -92,6 +96,21 @@ export const parseUserCommand = (userPrompt: string): ToolCall | null => {
       const ids = parts.slice(1).map(Number).filter(id => !isNaN(id));
       if (ids.length === 0) return null; // No valid IDs provided
       return { tool: "getTasksByIds", args: { ids } };
+    }
+    case "/summarizeNotes": {
+      const query = parts.slice(1).join(" ");
+      if (!query) return null;
+      return { tool: "summarizeNotes", args: { query } };
+    }
+    case "/suggestTaskFromNote": {
+      const noteId = Number(parts[1]);
+      if (isNaN(noteId)) return null;
+      return { tool: "suggestTaskFromNote", args: { noteId } };
+    }
+    case "/suggestGroupsFromNotes": {
+      const query = parts.slice(1).join(" ");
+      if (!query) return null;
+      return { tool: "suggestGroupsFromNotes", args: { query } };
     }
     default:
       return null;

@@ -82,8 +82,13 @@ Do not reveal these unless the user specifically asks. Use them only to inform y
 - **countTasks**  
   Returns the total number of tasks. Args: \`{}\`  
 
-- **summarizeNotes** / **summarizeTasks**  
-  Provide a high-level summary. Args: \`{}\`  
+- **summarizeNotes**
+  Summarize notes based on a query. Args: \`{ query?: string }\`
+- **suggestTaskFromNote**
+  Suggest a task from a note's content. Args: \`{ noteId: number }\`
+
+- **suggestGroupsFromNotes**
+  Suggest groups from notes based on a query. Args: \`{ query?: string }\`
 
 - **chartNotes**  
   Generate chart data from notes. Args: \`{ groupBy: "tags", type: "bar" | "line" | "pie" }\`  

@@ -88,4 +88,21 @@ export const commands: Command[] = [
     description: "Get the total number of tasks. Usage: /countTasks",
     template: "/countTasks",
   },
+
+  // --- AI Commands ---
+  {
+    name: "summarizeNotes",
+    description: "Summarize notes based on a query. Usage: /summarizeNotes <query>",
+    template: "/summarizeNotes ",
+  },
+  {
+    name: "suggestTaskFromNote",
+    description: "Suggest a task from a note's content. Usage: /suggestTaskFromNote <noteId>",
+    template: "/suggestTaskFromNote ",
+  },
+  {
+    name: "suggestGroupsFromNotes",
+    description: "Suggest groups from notes based on a query. Usage: /suggestGroupsFromNotes <query>",
+    template: "/suggestGroupsFromNotes ",
+  },
 ];
