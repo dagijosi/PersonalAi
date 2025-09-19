@@ -4,7 +4,7 @@ import type { Task } from '../types/TaskType';
 
 interface TaskState {
   tasks: Task[];
-  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'status'>) => void;
+  addTask: (task: Omit<Task, 'id' | 'createdAt'>) => void;
   updateTask: (task: Task) => void;
   deleteTask: (id: number) => void;
   updateTaskStatus: (id: number, status: Task['status']) => void;

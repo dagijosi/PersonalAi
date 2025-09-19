@@ -8,12 +8,18 @@ import { type Note } from "../types/NoteType";
 import { Modal } from "../common/ui/Modal";
 import { FiPlus } from "react-icons/fi";
 import NoteSummary from "../components/NoteSummary";
+import { fetchAISuggestedTask } from "../api/ai";
+import { type SuggestedTask } from "../types/TaskType";
+import { useTaskStore } from "../store/useTaskStore";
 
 const Notes: React.FC = () => {
   const { notes, addNote, updateNote, deleteNote } = useNoteStore();
+  const { addTask } = useTaskStore();
   const [isCreating, setIsCreating] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [suggestedTask, setSuggestedTask] = useState<SuggestedTask | null>(null);
+  const [showTaskSuggestionModal, setShowTaskSuggestionModal] = useState(false);
 
   const filteredNotes = useMemo(() => {
     return notes.filter(
@@ -39,18 +45,42 @@ const Notes: React.FC = () => {
     }
   };
 
-  const handleFormSubmit = (data: Omit<Note, 'id' | 'createdAt'>) => {
+  const handleFormSubmit = async (data: Omit<Note, 'id' | 'createdAt'>) => {
     if (editingNoteId) {
       updateNote({
         id: editingNoteId,
         createdAt: notes.find((n) => n.id === editingNoteId)!.createdAt,
         ...data,
       });
-      setEditingNoteId(null);
     } else {
       addNote(data);
-      setIsCreating(false);
     }
+    handleCancel();
+
+    // AI Task Suggestion
+    const aiSuggestedTask = await fetchAISuggestedTask(data.content);
+    if (aiSuggestedTask) {
+      setSuggestedTask(aiSuggestedTask);
+      setShowTaskSuggestionModal(true);
+    }
+  };
+
+  const handleCreateSuggestedTask = () => {
+    if (suggestedTask) {
+      addTask({
+        title: suggestedTask.title,
+        description: suggestedTask.description,
+        priority: suggestedTask.priority,
+        status: "todo", // Explicitly add status to satisfy type checker
+      });
+      setSuggestedTask(null);
+      setShowTaskSuggestionModal(false);
+    }
+  };
+
+  const handleDismissSuggestedTask = () => {
+    setSuggestedTask(null);
+    setShowTaskSuggestionModal(false);
   };
 
   const handleCancel = () => {
@@ -81,6 +111,42 @@ const Notes: React.FC = () => {
           onSubmit={handleFormSubmit}
           onClose={handleCancel}
         />
+      </Modal>
+
+      {/* Task Suggestion Modal */}
+      <Modal
+        isOpen={showTaskSuggestionModal}
+        onClose={handleDismissSuggestedTask}
+        title="AI Task Suggestion"
+      >
+        {suggestedTask && (
+          <div className="p-4">
+            <p className="text-primary mb-4">
+              The AI suggests creating a task based on your note:
+            </p>
+            <h3 className="text-lg font-semibold text-primary mb-2">
+              {suggestedTask.title}
+            </h3>
+            {suggestedTask.description && (
+              <p className="text-gray-700 mb-2">{suggestedTask.description}</p>
+            )}
+            <p className="text-sm text-gray-600 mb-4">
+              Priority: <span className="font-medium">{suggestedTask.priority}</span>
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleDismissSuggestedTask}
+              >
+                Dismiss
+              </Button>
+              <Button type="button" onClick={handleCreateSuggestedTask} className="bg-primary">
+                Create Task
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       <div className="mb-6">

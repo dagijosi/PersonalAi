@@ -87,3 +87,28 @@ Summary:`;
     throw new Error("Failed to generate summary from AI. Please try again.");
   }
 };
+
+export const fetchAISuggestedTask = async (content: string): Promise<{ title: string; description?: string; priority: "low" | "medium" | "high" } | null> => {
+  if (!content) {
+    return null;
+  }
+
+  const prompt = `Analyze the following note content and suggest a single, actionable task. If a task is clearly implied, provide its title, a brief description, and a priority (low, medium, or high) in JSON format. If no clear task is implied, return null. Do not include any other text or explanation.\n\nNote Content: "${content}"\n\nJSON Task Suggestion:`;
+
+  try {
+    const aiResponse = await fetchAIResponse(prompt);
+    const cleanedResponse = aiResponse.replace(/```json\n|```/g, '').trim(); // Clean up markdown code block
+    if (cleanedResponse.toLowerCase() === 'null') {
+      return null;
+    }
+    const suggestedTask = JSON.parse(cleanedResponse);
+    // Basic validation
+    if (suggestedTask && suggestedTask.title && suggestedTask.priority) {
+      return suggestedTask;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error fetching AI suggested task:", error);
+    return null;
+  }
+};

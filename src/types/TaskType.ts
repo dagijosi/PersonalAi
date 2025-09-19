@@ -9,3 +9,9 @@ export type Task = {
   dependsOn?: number[];
   linkedNotes?: number[];
 };
+
+export type SuggestedTask = {
+  title: string;
+  description?: string;
+  priority: "low" | "medium" | "high";
+};
