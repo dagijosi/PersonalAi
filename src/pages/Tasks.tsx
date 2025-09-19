@@ -47,7 +47,7 @@ const Tasks: React.FC = () => {
       updateTask({ ...existingTask, ...data });
       setEditingTaskId(null);
     } else {
-      addTask(data);
+      addTask({ ...data, status: "todo" }); // Add default status
       setIsCreating(false);
     }
   };

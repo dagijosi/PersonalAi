@@ -188,15 +188,16 @@ export const handleToolCall = async (
 
     // -------- Tasks --------
     case "addTask": {
-      const { title, description, dueDate, priority, dependsOn, linkedNotes } = toolCall.args as {
+      const { title, description, dueDate, priority, dependsOn, linkedNotes, status } = toolCall.args as {
         title: string;
         description?: string;
-        dueDate?: string; // Make dueDate optional here as well
+        dueDate?: string;
         priority: "low" | "medium" | "high";
+        status?: "todo" | "in-progress" | "done"; // Include status in type assertion
         dependsOn?: number[];
         linkedNotes?: number[];
       };
-      const newTask = addTask({ title, description, dueDate, priority, dependsOn, linkedNotes, status: "todo" });
+      const newTask = addTask({ title, description, dueDate, priority, dependsOn, linkedNotes, status: status ?? "todo" });
       return `Created new task with ID ${newTask.id}`;
     }
 
