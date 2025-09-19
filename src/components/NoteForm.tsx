@@ -6,19 +6,20 @@ import { Button } from "../common/ui/Button";
 import { Input } from "../common/ui/Input";
 import { Textarea } from "../common/ui/Textarea";
 import { type Note } from "../types/NoteType";
-import { FiTag } from "react-icons/fi";
+import { FiTag, FiLink } from "react-icons/fi";
 
 const noteSchema = z.object({
   title: z.string().min(1, "Title is required"),
   content: z.string().min(1, "Content is required"),
   tags: z.string().optional(),
+  linkedTasks: z.string().optional(),
 });
 
 export type NoteFormData = z.infer<typeof noteSchema>;
 
 interface NoteFormProps {
   note?: Note | null;
-  onSubmit: (data: NoteFormData) => void;
+  onSubmit: (data: Omit<Note, 'id' | 'createdAt'>) => void;
   onClose: () => void;
 }
 
@@ -35,6 +36,7 @@ const NoteForm: React.FC<NoteFormProps> = ({ note, onSubmit, onClose }) => {
       title: note?.title || "",
       content: note?.content || "",
       tags: note?.tags?.join(", ") || "",
+      linkedTasks: note?.linkedTasks?.join(", ") || "",
     },
   });
 
@@ -43,11 +45,17 @@ const NoteForm: React.FC<NoteFormProps> = ({ note, onSubmit, onClose }) => {
       title: note?.title || "",
       content: note?.content || "",
       tags: note?.tags?.join(", ") || "",
+      linkedTasks: note?.linkedTasks?.join(", ") || "",
     });
   }, [note, reset]);
 
   const handleFormSubmit = (data: NoteFormData) => {
-    onSubmit(data);
+    const processedData = {
+        ...data,
+        tags: data.tags ? data.tags.split(",").map((tag) => tag.trim()) : [],
+        linkedTasks: data.linkedTasks ? data.linkedTasks.split(",").map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id)) : [],
+    };
+    onSubmit(processedData);
     onClose();
   };
 
@@ -108,6 +116,14 @@ const NoteForm: React.FC<NoteFormProps> = ({ note, onSubmit, onClose }) => {
           </div>
         )}
       </div>
+
+      <Input
+        label="Linked Tasks (comma-separated IDs)"
+        labelClassName="text-primary font-medium"
+        placeholder="e.g. 1, 2, 3"
+        {...register("linkedTasks")}
+        icon={<FiLink />}
+      />
 
       {/* Actions */}
       <div className="mt-2 flex justify-end gap-2">

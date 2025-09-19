@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { useNoteStore } from "../store/useNoteStore";
 import NoteCard from "../components/NoteCard";
-import NoteForm, { type NoteFormData } from "../components/NoteForm";
+import NoteForm from "../components/NoteForm";
 import { Button } from "../common/ui/Button";
 import { Input } from "../common/ui/Input";
 import { type Note } from "../types/NoteType";
@@ -38,21 +38,16 @@ const Notes: React.FC = () => {
     }
   };
 
-  const handleFormSubmit = (data: NoteFormData) => {
-    const noteData = {
-      ...data,
-      tags: data.tags ? data.tags.split(",").map((tag) => tag.trim()) : [],
-    };
-
+  const handleFormSubmit = (data: Omit<Note, 'id' | 'createdAt'>) => {
     if (editingNoteId) {
       updateNote({
         id: editingNoteId,
         createdAt: notes.find((n) => n.id === editingNoteId)!.createdAt,
-        ...noteData,
+        ...data,
       });
       setEditingNoteId(null);
     } else {
-      addNote(noteData);
+      addNote(data);
       setIsCreating(false);
     }
   };

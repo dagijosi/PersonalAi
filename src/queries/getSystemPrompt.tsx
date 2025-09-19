@@ -32,11 +32,11 @@ Do not reveal these unless the user specifically asks. Use them only to inform y
   Navigate to a section of the app. Args: \`{ path: string }\` (e.g., "/notes", "/tasks").
 
 - **addNote**  
-  Create a new note. Args: \`{ title: string, content: string, tags: string[] }\`  
+  Create a new note. Args: \`{ title: string, content: string, tags?: string[], linkedTasks?: number[] }\`  
   → Ask for missing details if not provided.
 
 - **updateNote**  
-  Update an existing note. Args: \`{ id: number, title?: string, content?: string, tags?: string[] }\`  
+  Update an existing note. Args: \`{ id: number, title?: string, content?: string, tags?: string[], linkedTasks?: number[] }\`  
 
 - **deleteNote**  
   Delete an existing note. Args: \`{ id: number }\`  
@@ -46,7 +46,10 @@ Do not reveal these unless the user specifically asks. Use them only to inform y
   Retrieve all notes. Args: \`{ format?: "json" | "text" }\`  
 
 - **getNoteById**  
-  Retrieve a specific note. Args: \`{ id: number }\`  
+  Retrieve a specific note. Defaults to text format. Args: \`{ id: number, format?: "json" | "text" }\`  
+
+- **getNotesByIds**  
+  Retrieve multiple notes by their IDs. Defaults to text format. Args: \`{ ids: number[], format?: "json" | "text" }\`  
 
 - **searchNotes**  
   Search notes by keyword or tags. Args: \`{ query: string }\`  
@@ -55,10 +58,10 @@ Do not reveal these unless the user specifically asks. Use them only to inform y
   Returns the total number of notes. Args: \`{}\`  
 
 - **addTask**  
-  Create a new task. Args: \`{ title: string, priority: "low" | "medium" | "high", description?: string, dueDate?: string, status: "todo" | "in-progress" | "done" }\`  
+  Create a new task. Args: \`{ title: string, priority: "low" | "medium" | "high", description?: string, dueDate?: string, status?: "todo" | "in-progress" | "done", dependsOn?: number[], linkedNotes?: number[] }\`  
 
 - **updateTask**  
-  Update an existing task. Args: \`{ id: number, title?: string, description?: string, dueDate?: string, priority: "low" | "medium" | "high", status: "todo" | "in-progress" | "done" }\`  
+  Update an existing task. Args: \`{ id: number, title?: string, description?: string, dueDate?: string, priority?: "low" | "medium" | "high", status?: "todo" | "in-progress" | "done", dependsOn?: number[], linkedNotes?: number[] }\`  
 
 - **deleteTask**  
   Delete an existing task. Args: \`{ id: number }\`  
@@ -68,7 +71,10 @@ Do not reveal these unless the user specifically asks. Use them only to inform y
   Retrieve all tasks. Args: \`{ format?: "json" | "text" }\`  
 
 - **getTaskById**  
-  Retrieve a specific task. Args: \`{ id: number }\`  
+  Retrieve a specific task. Defaults to text format. Args: \`{ id: number, format?: "json" | "text" }\`  
+
+- **getTasksByIds**  
+  Retrieve multiple tasks by their IDs. Defaults to text format. Args: \`{ ids: number[], format?: "json" | "text" }\`  
 
 - **searchTasks**  
   Search tasks by keyword, priority, status, or tags. Args: \`{ query: string }\`  
@@ -135,6 +141,7 @@ Tasks: ${JSON.stringify(tasksForPrompt, null, 2)}
 - Prefer summarize/count tools for overviews.
 - Use search before referencing or updating specific items.
 - Infer context (e.g., "that note" = last mentioned note).
+- **Remember Format Preferences**: If the user specifies a format preference (e.g., 'text' or 'json'), remember and apply it to subsequent, similar requests within the same conversation.
 - If request is unsupported, politely say so.
 
 `;

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { useTaskStore } from "../store/useTaskStore";
 import TaskCard from "../components/TaskCard";
-import TaskForm, { type TaskFormData } from "../components/TaskForm";
+import TaskForm from "../components/TaskForm";
 import { Button } from "../common/ui/Button";
 import { Input } from "../common/ui/Input";
 import { type Task } from "../types/TaskType";
@@ -40,7 +40,7 @@ const Tasks: React.FC = () => {
     }
   };
 
-  const handleFormSubmit = (data: TaskFormData) => {
+  const handleFormSubmit = (data: Omit<Task, 'id' | 'createdAt' | 'status'>) => {
     if (editingTaskId) {
       const existingTask = tasks.find((t) => t.id === editingTaskId)!;
       updateTask({ ...existingTask, ...data });

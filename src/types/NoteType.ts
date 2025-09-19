@@ -4,4 +4,5 @@ export type Note = {
   content: string;
   tags?: string[];
   createdAt: string;
+  linkedTasks?: number[];
 };

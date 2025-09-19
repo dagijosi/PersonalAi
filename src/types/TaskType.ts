@@ -6,4 +6,6 @@ export type Task = {
   priority: "low" | "medium" | "high";
   status: "todo" | "in-progress" | "done";
   createdAt: string;
+  dependsOn?: number[];
+  linkedNotes?: number[];
 };

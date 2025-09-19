@@ -1,7 +1,7 @@
 import React from "react";
 import { type Note } from "../types/NoteType";
 import { Button } from "../common/ui/Button";
-import { FiEdit2, FiTrash2, FiTag } from "react-icons/fi";
+import { FiEdit2, FiTrash2, FiTag, FiLink } from "react-icons/fi";
 
 interface NoteCardProps {
   note: Note;
@@ -24,10 +24,10 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onEdit, onDelete }) => {
         {/* Content */}
         <p className="mt-3 text-sm text-light-text line-clamp-4">{note.content}</p>
 
-        {/* Tags */}
-        {note.tags && note.tags.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {note.tags.map((tag) => (
+        {/* Tags and Linked Tasks */}
+        <div className="mt-3 flex flex-wrap gap-2 items-center">
+          {note.tags && note.tags.length > 0 && (
+            note.tags.map((tag) => (
               <span
                 key={tag}
                 className="flex items-center gap-1 text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full border border-blue-200"
@@ -35,9 +35,15 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onEdit, onDelete }) => {
                 <FiTag className="w-3 h-3" />
                 {tag}
               </span>
-            ))}
-          </div>
-        )}
+            ))
+          )}
+          {note.linkedTasks && note.linkedTasks.length > 0 && (
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <FiLink className="w-3 h-3" />
+              <span>Linked tasks: {note.linkedTasks.join(', ')}</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Actions */}

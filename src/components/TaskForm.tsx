@@ -7,20 +7,22 @@ import { Input } from "../common/ui/Input";
 import { Textarea } from "../common/ui/Textarea";
 import { Select } from "../common/ui/Select";
 import { type Task } from "../types/TaskType";
-import { FiFlag } from "react-icons/fi";
+import { FiFlag, FiLink, FiLock } from "react-icons/fi";
 
 const taskSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
   dueDate: z.string().optional(),
   priority: z.enum(["low", "medium", "high"]),
+  dependsOn: z.string().optional(),
+  linkedNotes: z.string().optional(),
 });
 
 export type TaskFormData = z.infer<typeof taskSchema>;
 
 interface TaskFormProps {
   task?: Task | null;
-  onSubmit: (data: TaskFormData) => void;
+  onSubmit: (data: Omit<Task, 'id' | 'createdAt' | 'status'>) => void;
   onClose: () => void;
 }
 
@@ -38,6 +40,8 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onClose }) => {
       description: task?.description || "",
       dueDate: task?.dueDate || "",
       priority: task?.priority || "medium",
+      dependsOn: task?.dependsOn?.join(", ") || "",
+      linkedNotes: task?.linkedNotes?.join(", ") || "",
     },
   });
 
@@ -47,11 +51,18 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onClose }) => {
       description: task?.description || "",
       dueDate: task?.dueDate || "",
       priority: task?.priority || "medium",
+      dependsOn: task?.dependsOn?.join(", ") || "",
+      linkedNotes: task?.linkedNotes?.join(", ") || "",
     });
   }, [task, reset]);
 
   const handleFormSubmit = (data: TaskFormData) => {
-    onSubmit(data);
+    const processedData = {
+        ...data,
+        dependsOn: data.dependsOn ? data.dependsOn.split(",").map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id)) : [],
+        linkedNotes: data.linkedNotes ? data.linkedNotes.split(",").map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id)) : [],
+    };
+    onSubmit(processedData);
     onClose();
   };
 
@@ -111,6 +122,22 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onClose }) => {
           </span>
         </div>
       </div>
+
+      <Input
+        label="Depends On (comma-separated IDs)"
+        labelClassName="text-primary font-medium"
+        placeholder="e.g. 1, 2, 3"
+        {...register("dependsOn")}
+        icon={<FiLock />}
+      />
+
+      <Input
+        label="Linked Notes (comma-separated IDs)"
+        labelClassName="text-primary font-medium"
+        placeholder="e.g. 1, 2, 3"
+        {...register("linkedNotes")}
+        icon={<FiLink />}
+      />
 
       <div className="mt-4 flex justify-end gap-2">
         <Button type="button" variant="ghost" className="hover:bg-gray-100" onClick={onClose}>

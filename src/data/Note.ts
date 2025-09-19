@@ -8,6 +8,7 @@ export const demoNotes: Note[] = [
       "Discussed requirements for new web app. Client prefers React + Node stack. Deadline is in November.",
     tags: ["work", "meeting"],
     createdAt: "2025-09-17T09:00:00Z",
+    linkedTasks: [2],
   },
   {
     id: 2,

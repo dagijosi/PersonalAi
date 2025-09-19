@@ -6,6 +6,7 @@ type ToolName =
   | "addNote"
   | "getNotes"
   | "getNoteById"
+  | "getNotesByIds"
   | "updateNote"
   | "deleteNote"
   | "countNotes"
@@ -14,6 +15,7 @@ type ToolName =
   | "addTask"
   | "getTasks"
   | "getTaskById"
+  | "getTasksByIds"
   | "updateTask"
   | "deleteTask"
   | "countTasks"
@@ -33,6 +35,7 @@ type ToolArgs =
   | { title: string; content: string; tags: string[] } // addNote
   | Record<string, never> // getNotes
   | { id: number } // getNoteById, deleteNote
+  | { ids: number[] } // getNotesByIds, getTasksByIds
   | { id: number; title: string; content: string; tags: string[] } // updateNote
 
   // Tasks
@@ -79,6 +82,16 @@ export const parseUserCommand = (userPrompt: string): ToolCall | null => {
       if (!path) return null;
       if (!path.startsWith("/")) path = "/" + path; // make absolute
       return { tool: "navigate", args: { path } };
+    }
+    case "/getNotesByIds": {
+      const ids = parts.slice(1).map(Number).filter(id => !isNaN(id));
+      if (ids.length === 0) return null; // No valid IDs provided
+      return { tool: "getNotesByIds", args: { ids } };
+    }
+    case "/getTasksByIds": {
+      const ids = parts.slice(1).map(Number).filter(id => !isNaN(id));
+      if (ids.length === 0) return null; // No valid IDs provided
+      return { tool: "getTasksByIds", args: { ids } };
     }
     default:
       return null;

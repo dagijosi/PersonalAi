@@ -16,6 +16,8 @@ import {
 } from "../data/Task";
 import routes from "../router/routes";
 import type { AppRoute } from "../types/AppType";
+import type { Note } from "../types/NoteType";
+import type { Task } from "../types/TaskType";
 import type { ToolCall } from "../utils/commandParser";
 import type { NavigateFunction } from "react-router-dom";
 
@@ -43,12 +45,13 @@ export const handleToolCall = async (
 
     // -------- Notes --------
     case "addNote": {
-      const { title, content, tags } = toolCall.args as {
+      const { title, content, tags, linkedTasks } = toolCall.args as {
         title: string;
         content: string;
         tags: string[];
+        linkedTasks?: number[];
       };
-      const newNote = addNote({ title, content, tags });
+      const newNote = addNote({ title, content, tags, linkedTasks });
       return `Created new note with ID ${newNote.id}`;
     }
 
@@ -82,15 +85,58 @@ export const handleToolCall = async (
     }
 
     case "getNoteById": {
-      const { id } = toolCall.args as { id: number };
+      const { id, format = "text" } = toolCall.args as { id: number, format?: "json" | "text" };
       const note = getNoteById(id);
-      return note
-        ? `ID ${note.id}: ${note.title}\nContent: ${note.content}${
-            note.tags && note.tags.length > 0
-              ? `\nTags: ${note.tags.join(", ")}`
-              : ""
-          }\nCreated: ${new Date(note.createdAt).toLocaleString()}`
-        : `No note found with ID ${id}`;
+
+      if (!note) return `No note found with ID ${id}`;
+
+      if (format === 'json') {
+        return "```json\n" + JSON.stringify(note, null, 2) + "\n```";
+      }
+
+      let response = `ID ${note.id}: ${note.title}\nContent: ${note.content}`;
+      if (note.tags && note.tags.length > 0) {
+        response += `\nTags: ${note.tags.join(", ")}`;
+      }
+      response += `\nCreated: ${new Date(note.createdAt).toLocaleString()}`;
+
+      if (note.linkedTasks && note.linkedTasks.length > 0) {
+        const linkedTasks = note.linkedTasks.map(getTaskById).filter((task): task is Task => !!task);
+        if (linkedTasks.length > 0) {
+          response += "\n\nLinked Tasks:";
+          response += linkedTasks.map(task => `\n- ID ${task.id}: ${task.title} (${task.status})`).join("");
+        }
+      }
+
+      return response;
+    }
+
+    case "getNotesByIds": {
+      const { ids, format = "text" } = toolCall.args as { ids: number[], format?: "json" | "text" };
+      const notes = ids.map(getNoteById).filter((note): note is Note => !!note);
+
+      if (!notes.length) return `No notes found for IDs: ${ids.join(", ")}`;
+
+      if (format === 'json') {
+        return "```json\n" + JSON.stringify(notes, null, 2) + "\n```";
+      }
+
+      return notes.map(note => {
+        let response = `Note ${note.id}: ${note.title}\nContent: ${note.content}`;
+        if (note.tags && note.tags.length > 0) {
+          response += `\nTags: ${note.tags.join(", ")}`;
+        }
+        response += `\nCreated: ${new Date(note.createdAt).toLocaleString()}`;
+
+        if (note.linkedTasks && note.linkedTasks.length > 0) {
+          const linkedTasks = note.linkedTasks.map(getTaskById).filter((task): task is Task => !!task);
+          if (linkedTasks.length > 0) {
+            response += "\n\nLinked Tasks:";
+            response += linkedTasks.map(task => `\n- ID ${task.id}: ${task.title} (${task.status})`).join("");
+          }
+        }
+        return response;
+      }).join("\n\n--- Note ---\n\n");
     }
 
     case "updateNote": {
@@ -99,6 +145,7 @@ export const handleToolCall = async (
         title?: string;
         content?: string;
         tags?: string[];
+        linkedTasks?: number[];
       };
 
       const originalNote = getNoteById(id);
@@ -140,13 +187,15 @@ export const handleToolCall = async (
 
     // -------- Tasks --------
     case "addTask": {
-      const { title, description, dueDate, priority } = toolCall.args as {
+      const { title, description, dueDate, priority, dependsOn, linkedNotes } = toolCall.args as {
         title: string;
         description?: string;
         dueDate: string;
         priority: "low" | "medium" | "high";
+        dependsOn?: number[];
+        linkedNotes?: number[];
       };
-      const newTask = addTask({ title, description, dueDate, priority });
+      const newTask = addTask({ title, description, dueDate, priority, dependsOn, linkedNotes });
       return `Created new task with ID ${newTask.id}`;
     }
 
@@ -194,15 +243,58 @@ export const handleToolCall = async (
     }
 
     case "getTaskById": {
-      const { id } = toolCall.args as { id: number };
+      const { id, format = "text" } = toolCall.args as { id: number, format?: "json" | "text" };
       const task = getTaskById(id);
-      return task
-        ? `ID ${task.id}: ${task.title}\nDescription: ${
-            task.description ?? "No description"
-          }\nDue: ${task.dueDate}\nPriority: ${task.priority}\nStatus: ${
-            task.status
-          }\nCreated: ${new Date(task.createdAt).toLocaleString()}`
-        : `No task found with ID ${id}`;
+
+      if (!task) return `No task found with ID ${id}`;
+
+      if (format === 'json') {
+        return "```json\n" + JSON.stringify(task, null, 2) + "\n```";
+      }
+
+      let response = `ID ${task.id}: ${task.title}\nDescription: ${
+        task.description ?? "No description"
+      }\nDue: ${task.dueDate}\nPriority: ${task.priority}\nStatus: ${
+        task.status
+      }\nCreated: ${new Date(task.createdAt).toLocaleString()}`;
+
+      if (task.linkedNotes && task.linkedNotes.length > 0) {
+        const linkedNotes = task.linkedNotes.map(getNoteById).filter((note): note is Note => !!note);
+        if (linkedNotes.length > 0) {
+          response += "\n\nLinked Notes:";
+          response += linkedNotes.map(note => `\n- ID ${note.id}: ${note.title}`).join("");
+        }
+      }
+
+      return response;
+    }
+
+    case "getTasksByIds": {
+      const { ids, format = "text" } = toolCall.args as { ids: number[], format?: "json" | "text" };
+      const tasks = ids.map(getTaskById).filter((task): task is Task => !!task);
+
+      if (!tasks.length) return `No tasks found for IDs: ${ids.join(", ")}`;
+
+      if (format === 'json') {
+        return "```json\n" + JSON.stringify(tasks, null, 2) + "\n```";
+      }
+
+      return tasks.map(task => {
+        let response = `Task ${task.id}: ${task.title}\nDescription: ${
+          task.description ?? "No description"
+        }\nDue: ${task.dueDate}\nPriority: ${task.priority}\nStatus: ${
+          task.status
+        }\nCreated: ${new Date(task.createdAt).toLocaleString()}`;
+
+        if (task.linkedNotes && task.linkedNotes.length > 0) {
+          const linkedNotes = task.linkedNotes.map(getNoteById).filter((note): note is Note => !!note);
+          if (linkedNotes.length > 0) {
+            response += "\n\nLinked Notes:";
+            response += linkedNotes.map(note => `\n- ID ${note.id}: ${note.title}`).join("");
+          }
+        }
+        return response;
+      }).join("\n\n--- Task ---\n\n");
     }
 
     case "updateTask": {
@@ -213,6 +305,8 @@ export const handleToolCall = async (
         dueDate?: string;
         priority?: "low" | "medium" | "high";
         status?: "todo" | "in-progress" | "done";
+        dependsOn?: number[];
+        linkedNotes?: number[];
       };
 
       const originalTask = getTaskById(id);

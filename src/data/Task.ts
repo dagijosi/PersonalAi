@@ -36,6 +36,7 @@ export const demoTasks: Task[] = [
     priority: "high",
     status: "todo",
     createdAt: "2025-09-17T12:15:00Z",
+    dependsOn: [2],
   },
   {
     id: 5,
@@ -45,6 +46,7 @@ export const demoTasks: Task[] = [
     priority: "medium",
     status: "in-progress",
     createdAt: "2025-09-16T09:45:00Z",
+    dependsOn: [7],
   },
   {
     id: 6,
@@ -63,6 +65,7 @@ export const demoTasks: Task[] = [
     priority: "high",
     status: "in-progress",
     createdAt: "2025-09-17T11:00:00Z",
+    linkedNotes: [8],
   },
   {
     id: 8,
