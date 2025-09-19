@@ -4,5 +4,6 @@ export type Note = {
   content: string;
   tags?: string[];
   createdAt: string;
-  linkedTasks?: number[];
+  groupName?: string;
+  linkedTasks?: number[]; // New property for linking notes to tasks
 };

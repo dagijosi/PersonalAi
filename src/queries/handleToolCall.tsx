@@ -190,12 +190,12 @@ export const handleToolCall = async (
       const { title, description, dueDate, priority, dependsOn, linkedNotes } = toolCall.args as {
         title: string;
         description?: string;
-        dueDate: string;
+        dueDate?: string; // Make dueDate optional here as well
         priority: "low" | "medium" | "high";
         dependsOn?: number[];
         linkedNotes?: number[];
       };
-      const newTask = addTask({ title, description, dueDate, priority, dependsOn, linkedNotes });
+      const newTask = addTask({ title, description, dueDate, priority, dependsOn, linkedNotes, status: "todo" });
       return `Created new task with ID ${newTask.id}`;
     }
 
@@ -482,7 +482,7 @@ ${JSON.stringify(
 };
 
 function flattenRoutes(routes: AppRoute[]): string[] {
-  return routes.flatMap((r) => [
+  return routes.flatMap((r: AppRoute) => [
     ...(r.path ? [r.path] : []),
     ...(r.children ? flattenRoutes(r.children) : []),
   ]);

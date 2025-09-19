@@ -6,26 +6,29 @@ import { Button } from "../common/ui/Button";
 import { Input } from "../common/ui/Input";
 import { type Note } from "../types/NoteType";
 import { Modal } from "../common/ui/Modal";
-import { FiPlus } from "react-icons/fi";
+import { FiPlus, FiLayers } from "react-icons/fi";
 import NoteSummary from "../components/NoteSummary";
-import { fetchAISuggestedTask } from "../api/ai";
+import { fetchAISuggestedTask, fetchAISuggestedGroups } from "../api/ai";
 import { type SuggestedTask } from "../types/TaskType";
 import { useTaskStore } from "../store/useTaskStore";
 
 const Notes: React.FC = () => {
-  const { notes, addNote, updateNote, deleteNote } = useNoteStore();
+  const { notes, addNote, updateNote, deleteNote, groupNotes } = useNoteStore();
   const { addTask } = useTaskStore();
   const [isCreating, setIsCreating] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [suggestedTask, setSuggestedTask] = useState<SuggestedTask | null>(null);
   const [showTaskSuggestionModal, setShowTaskSuggestionModal] = useState(false);
+  const [suggestedGroups, setSuggestedGroups] = useState<{ groupName: string; noteIds: number[] }[] | null>(null);
+  const [showGroupSuggestionModal, setShowGroupSuggestionModal] = useState(false);
 
   const filteredNotes = useMemo(() => {
     return notes.filter(
       (note) =>
         note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        note.content.toLowerCase().includes(searchTerm.toLowerCase())
+        note.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        note.groupName?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [notes, searchTerm]);
 
@@ -88,15 +91,41 @@ const Notes: React.FC = () => {
     setEditingNoteId(null);
   };
 
+  const handleSuggestGroups = async () => {
+    const aiSuggestedGroups = await fetchAISuggestedGroups(notes);
+    if (aiSuggestedGroups && aiSuggestedGroups.length > 0) {
+      setSuggestedGroups(aiSuggestedGroups);
+      setShowGroupSuggestionModal(true);
+    } else {
+      alert("No groups suggested by AI.");
+    }
+  };
+
+  const handleAcceptGroup = (groupName: string, noteIds: number[]) => {
+    groupNotes(noteIds, groupName);
+    setSuggestedGroups(null);
+    setShowGroupSuggestionModal(false);
+  };
+
+  const handleDismissGroupSuggestions = () => {
+    setSuggestedGroups(null);
+    setShowGroupSuggestionModal(false);
+  };
+
   return (
     <div className="p-8 bg-background text-primary">
       <div className="mt-4 mb-6 flex items-center justify-between">
         <h1 className="text-3xl font-bold font-poppins mb-6">Notes</h1>
-        {!isCreating && (
-          <Button onClick={handleAddNote} className="bg-primary">
-            <FiPlus className="mr-2"/> Add Note
+        <div className="flex gap-2">
+          <Button onClick={handleSuggestGroups} className="bg-secondary text-secondary-foreground hover:bg-secondary/80">
+            <FiLayers className="mr-2"/> Suggest Groups
           </Button>
-        )}
+          {!isCreating && (
+            <Button onClick={handleAddNote} className="bg-primary">
+              <FiPlus className="mr-2"/> Add Note
+            </Button>
+          )}
+        </div>
       </div>
       <NoteSummary />
       <Modal
@@ -145,6 +174,53 @@ const Notes: React.FC = () => {
                 Create Task
               </Button>
             </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Group Suggestion Modal */}
+      <Modal
+        isOpen={showGroupSuggestionModal}
+        onClose={handleDismissGroupSuggestions}
+        title="AI Group Suggestions"
+      >
+        {suggestedGroups && suggestedGroups.length > 0 ? (
+          <div className="p-4">
+            <p className="text-primary mb-4">
+              The AI suggests the following groups based on your notes:
+            </p>
+            {suggestedGroups.map((group, index) => (
+              <div key={index} className="bg-gray-50 p-3 rounded-lg mb-4 border border-gray-200">
+                <h3 className="text-lg font-semibold text-primary mb-2">{group.groupName}</h3>
+                <p className="text-gray-700 mb-2">Notes in this group:</p>
+                <ul className="list-disc list-inside text-gray-600 mb-4 pl-4">
+                  {group.noteIds.map(noteId => {
+                    const note = notes.find(n => n.id === noteId);
+                    return note ? <li key={noteId}>{note.title}</li> : null;
+                  })}
+                </ul>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={handleDismissGroupSuggestions}
+                  >
+                    Dismiss
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => handleAcceptGroup(group.groupName, group.noteIds)}
+                    className="bg-primary"
+                  >
+                    Accept Group
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="p-4 text-primary">
+            <p>No groups suggested at this time.</p>
           </div>
         )}
       </Modal>

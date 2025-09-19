@@ -7,6 +7,7 @@ interface NoteState {
   addNote: (note: Omit<Note, 'id' | 'createdAt'>) => void;
   updateNote: (note: Note) => void;
   deleteNote: (id: number) => void;
+  groupNotes: (noteIds: number[], groupName: string) => void;
 }
 
 export const useNoteStore = create<NoteState>((set) => ({
@@ -31,5 +32,11 @@ export const useNoteStore = create<NoteState>((set) => ({
   deleteNote: (id) =>
     set((state) => ({
       notes: state.notes.filter((note) => note.id !== id),
+    })),
+  groupNotes: (noteIds, groupName) =>
+    set((state) => ({
+      notes: state.notes.map((note) =>
+        noteIds.includes(note.id) ? { ...note, groupName } : note
+      ),
     })),
 }));

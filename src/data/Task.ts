@@ -102,7 +102,7 @@ export const getTaskById = (id: number): Task | undefined => {
   return demoTasks.find((task) => task.id === id);
 };
 
-export const addTask = (task: Omit<Task, "id" | "createdAt" | "status">): Task => {
+export const addTask = (task: Omit<Task, "id" | "createdAt">): Task => {
   const newTask: Task = {
     ...task,
     id: Math.max(0, ...demoTasks.map((i) => i.id)) + 1,

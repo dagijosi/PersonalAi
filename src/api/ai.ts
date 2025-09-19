@@ -112,3 +112,35 @@ export const fetchAISuggestedTask = async (content: string): Promise<{ title: st
     return null;
   }
 };
+
+export const fetchAISuggestedGroups = async (notes: { id: number; title: string; content: string; }[]): Promise<{ groupName: string; noteIds: number[] }[] | null> => {
+  if (!notes || notes.length < 3) { // Need at least 3 notes to suggest a group
+    return null;
+  }
+
+  const notesContent = notes.map(note => `ID: ${note.id}, Title: ${note.title}, Content: ${note.content}`).join('\n---\n');
+
+  const prompt = `Analyze the following notes and identify if there are groups of 3 or more notes that share a common theme or topic. If you find such groups, suggest them in JSON format as an array of objects, where each object has a 'groupName' (e.g., 'Budget Notes', 'Project X Ideas') and 'noteIds' (an array of the IDs of notes belonging to that group). If no clear groups are found, return null. Do not include any other text or explanation.
+
+Notes:
+${notesContent}
+
+JSON Group Suggestions:`;
+
+  try {
+    const aiResponse = await fetchAIResponse(prompt);
+    const cleanedResponse = aiResponse.replace(/```json\n|```/g, '').trim();
+    if (cleanedResponse.toLowerCase() === 'null') {
+      return null;
+    }
+    const suggestedGroups = JSON.parse(cleanedResponse);
+    // Basic validation
+    if (Array.isArray(suggestedGroups) && suggestedGroups.every(group => group.groupName && Array.isArray(group.noteIds) && group.noteIds.length >= 3)) {
+      return suggestedGroups;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error fetching AI suggested groups:", error);
+    return null;
+  }
+};
